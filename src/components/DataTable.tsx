@@ -34,12 +34,11 @@ const DataTable = ({ data }: DataTableProps) => {
   const [sortKey, setSortKey] = useState<SortKey>('clicks');
   const [sortDesc, setSortDesc] = useState(true);
 
-  // Lógica de filtragem (mantém a mesma base: com cliques + top 10 sem cliques)
+  // Separando e unindo os dados (agora exibe todos sem cliques, sem limite de top 10)
   const withClicks = data.filter(d => d.clicks > 0);
   const withoutClicks = data
     .filter(d => d.clicks === 0)
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 10);
+    .sort((a, b) => b.impressions - a.impressions);
 
   let displayData = [...withClicks, ...withoutClicks];
 
@@ -78,7 +77,7 @@ const DataTable = ({ data }: DataTableProps) => {
     <div className="mt-8 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
       <div className="p-6 border-b border-slate-100 dark:border-slate-800">
         <h3 className="text-lg font-bold">Desempenho Detalhado por Termo</h3>
-        <p className="text-sm text-slate-500">Exibindo termos com cliques e top 10 por impressões (sem cliques)</p>
+        <p className="text-sm text-slate-500">Exibindo todos os termos processados (com e sem cliques)</p>
       </div>
       <div className="overflow-x-auto">
         <Table>
