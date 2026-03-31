@@ -17,6 +17,19 @@ interface DataTableProps {
 
 type SortKey = 'searchTerm' | 'keyword' | 'matchType' | 'cost' | 'impressions' | 'clicks' | 'ctr' | 'avgCpc';
 
+const getAbbreviatedMatchType = (matchType: string): string => {
+  if (!matchType) return '';
+  const map: Record<string, string> = {
+    'AI Max': 'AI Max',
+    'Correspondência ampla': 'Ampla',
+    'Correspondência de frase': 'Frase',
+    'Correspondência exata': 'Exata',
+    'Correspondência exata variação': 'Exata variação',
+    'Correspondência de frase variação': 'Frase variação',
+  };
+  return map[matchType] || matchType;
+};
+
 const DataTable = ({ data }: DataTableProps) => {
   const [sortKey, setSortKey] = useState<SortKey>('clicks');
   const [sortDesc, setSortDesc] = useState(true);
@@ -156,7 +169,7 @@ const DataTable = ({ data }: DataTableProps) => {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-normal text-[10px] uppercase">
-                    {row.matchType || 'N/A'}
+                    {getAbbreviatedMatchType(row.matchType) || 'N/A'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono text-sm">{formatCurrency(row.cost)}</TableCell>
