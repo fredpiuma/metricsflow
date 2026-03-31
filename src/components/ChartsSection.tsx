@@ -11,7 +11,6 @@ interface ChartsSectionProps {
 
 const COLORS = ['#1a73e8', '#34a853', '#fbbc05', '#ea4335', '#8e24aa', '#00acc1', '#fb8c00', '#546e7a', '#d81b60', '#7cb342'];
 
-// Dicionário de abreviações para os gráficos (já recebe a string padronizada em PT-BR do parser)
 const getAbbreviatedMatchType = (matchType: string): string => {
   if (!matchType) return '';
   const map: Record<string, string> = {
@@ -25,10 +24,10 @@ const getAbbreviatedMatchType = (matchType: string): string => {
   return map[matchType] || matchType;
 };
 
-const formatLabel = (term: string, matchType: string, maxLength: number) => {
-  const truncatedTerm = term.length > maxLength ? term.substring(0, maxLength) + '...' : term;
+// Removido o parâmetro maxLength e o truncamento
+const formatLabel = (term: string, matchType: string) => {
   const abbr = getAbbreviatedMatchType(matchType);
-  return abbr ? `${truncatedTerm} (${abbr})` : truncatedTerm;
+  return abbr ? `${term} (${abbr})` : term;
 };
 
 const ChartsSection = ({ data }: ChartsSectionProps) => {
@@ -37,7 +36,7 @@ const ChartsSection = ({ data }: ChartsSectionProps) => {
     .sort((a, b) => b.cost - a.cost)
     .slice(0, 5)
     .map(d => ({
-      name: formatLabel(d.searchTerm, d.matchType, 20),
+      name: formatLabel(d.searchTerm, d.matchType),
       valor: d.cost
     }));
 
@@ -47,7 +46,7 @@ const ChartsSection = ({ data }: ChartsSectionProps) => {
   const othersClicks = sortedByClicks.slice(10).reduce((sum, d) => sum + d.clicks, 0);
   
   const clickDistribution = topClicks.map(d => ({
-    name: formatLabel(d.searchTerm, d.matchType, 15),
+    name: formatLabel(d.searchTerm, d.matchType),
     value: d.clicks
   }));
 
@@ -63,10 +62,11 @@ const ChartsSection = ({ data }: ChartsSectionProps) => {
         </CardHeader>
         <CardContent className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topCost} layout="vertical" margin={{ left: 40, right: 30 }}>
+            <BarChart data={topCost} layout="vertical" margin={{ left: 10, right: 30 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
               <XAxis type="number" stroke="#94a3b8" fontSize={12} />
-              <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={12} width={120} />
+              {/* Aumentado o width do YAxis para acomodar textos mais longos */}
+              <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={11} width={200} />
               <Tooltip 
                 formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
