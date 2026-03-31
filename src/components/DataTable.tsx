@@ -15,7 +15,7 @@ interface DataTableProps {
   data: AdsRow[];
 }
 
-type SortKey = 'searchTerm' | 'matchType' | 'cost' | 'impressions' | 'clicks' | 'ctr' | 'avgCpc';
+type SortKey = 'searchTerm' | 'keyword' | 'matchType' | 'cost' | 'impressions' | 'clicks' | 'ctr' | 'avgCpc';
 
 const DataTable = ({ data }: DataTableProps) => {
   const [sortKey, setSortKey] = useState<SortKey>('clicks');
@@ -72,12 +72,21 @@ const DataTable = ({ data }: DataTableProps) => {
           <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
             <TableRow>
               <TableHead 
-                className="w-[300px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                className="w-[250px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
                 onClick={() => handleSort('searchTerm')}
               >
                 <div className="flex items-center">
                   Termo de Pesquisa
                   {renderSortIcon('searchTerm')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="w-[200px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('keyword')}
+              >
+                <div className="flex items-center">
+                  Palavra-chave
+                  {renderSortIcon('keyword')}
                 </div>
               </TableHead>
               <TableHead 
@@ -141,6 +150,9 @@ const DataTable = ({ data }: DataTableProps) => {
               <TableRow key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                 <TableCell className="font-medium">
                   {row.searchTerm}
+                </TableCell>
+                <TableCell className="text-slate-600 dark:text-slate-400">
+                  {row.keyword || '-'}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-normal text-[10px] uppercase">
