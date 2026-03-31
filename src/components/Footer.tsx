@@ -6,7 +6,7 @@ const Footer = () => {
       <p>
         &copy; {new Date().getFullYear()}{" "}
         <a 
-          href="https://www.fredericodecastro.com.br" 
+          href="https://www.fredericodecastro.com.br/links" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="text-blue-600 hover:text-blue-800 transition-colors font-medium hover:underline"
