@@ -14,7 +14,26 @@ export interface AdsRow {
   [key: string]: any;
 }
 
-// Helper para ler linhas CSV/TSV corretamente (ignorando delimitadores dentro de aspas)
+// Dicionário de traduções para padronizar os tipos de correspondência
+const MATCH_TYPE_TRANSLATIONS: Record<string, string> = {
+  'ai max': 'AI Max',
+  'broad match': 'Correspondência ampla',
+  'correspondência ampla': 'Correspondência ampla',
+  'correspondência de frase': 'Correspondência de frase',
+  'correspondência exata': 'Correspondência exata',
+  'exact match': 'Correspondência exata',
+  'exact match close variant': 'Correspondência exata variação',
+  'phrase match': 'Correspondência de frase',
+  'phrase match close variant': 'Correspondência de frase variação'
+};
+
+const translateMatchType = (raw: string): string => {
+  if (!raw) return '';
+  const normalized = raw.toLowerCase().trim();
+  return MATCH_TYPE_TRANSLATIONS[normalized] || raw; // Fallback para o original se não encontrar
+};
+
+// Helper para ler linhas CSV/TSV corretamente
 const parseLine = (line: string, separator: string): string[] => {
   if (separator === '\t') return line.split('\t');
   
@@ -46,16 +65,13 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
   let separator = '\t';
   let headers: string[] = [];
 
-  // 1. Encontrar o Cabeçalho (Header) dinamicamente
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim()) continue;
 
-    // Detectar separador (se tem tab, é TSV, senão assume CSV)
     const currentSep = line.includes('\t') ? '\t' : ',';
     const cols = parseLine(line, currentSep);
     
-    // Normaliza para comparação (minúsculas, sem espaços extras)
     const normalizedCols = cols.map(c => c.toLowerCase().trim().replace(/^"|"$/g, ''));
     
     if (normalizedCols.includes('cliques') || normalizedCols.includes('clicks')) {
@@ -68,13 +84,11 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
 
   if (headerIndex === -1) return [];
 
-  // 2. Mapeamento Estrito de Índices
   const findCol = (aliases: string[]) => {
     return headers.findIndex(h => aliases.includes(h));
   };
 
   const idx = {
-    // Tenta encontrar "Search term", senão cai para "Keyword/Palavra-chave"
     searchTerm: findCol(['search term', 'termo de pesquisa']) !== -1 
       ? findCol(['search term', 'termo de pesquisa']) 
       : findCol(['palavra-chave', 'keyword', 'critério de pesquisa']),
@@ -83,7 +97,7 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     campaign: findCol(['campaign', 'campanha']),
     adGroup: findCol(['ad group', 'grupo de anúncios']),
     campaignStatus: findCol(['campaign status', 'status da campanha']),
-    adGroupStatus: findCol(['ad group status', 'status do grupo de anúncios', 'status']), // 'status' pode ser genérico na web
+    adGroupStatus: findCol(['ad group status', 'status do grupo de anúncios', 'status']),
     clicks: findCol(['clicks', 'cliques']),
     cost: findCol(['cost', 'custo']),
     impressions: findCol(['impressions', 'impressões', 'impr.']),
@@ -91,10 +105,15 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     avgCpc: findCol(['avg cpc', 'cpc médio', 'cpc méd.']),
   };
 
-  // 3. Normalizadores de Texto e Números
   const cleanText = (val: string | undefined): string => {
     if (!val) return '';
     return val.replace(/^"|"$/g, '').trim();
+  };
+
+  // Limpa caracteres especiais [ ] e " usados para indicar correspondência na web UI
+  const cleanKeyword = (val: string | undefined): string => {
+    if (!val) return '';
+    return val.replace(/["[\]]/g, '').trim();
   };
 
   const cleanNumber = (val: string | undefined): number => {
@@ -102,18 +121,14 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     let cleaned = val.replace(/"/g, '').trim();
     if (cleaned === '--' || cleaned === '') return 0;
     
-    // Remove símbolos de moeda, porcentagem e espaços
     cleaned = cleaned.replace(/[R$\s%]/gi, '');
     
-    // Logica avançada para casas decimais (1.234,56 vs 1,234.56)
     const match = cleaned.match(/[.,]/g);
     if (match && match.length > 0) {
       const lastPunctuation = match[match.length - 1];
       if (lastPunctuation === ',') {
-        // Formato PT-BR: remove os pontos e troca a vírgula por ponto
         cleaned = cleaned.replace(/\./g, '').replace(',', '.');
       } else {
-        // Formato EN: remove as vírgulas
         cleaned = cleaned.replace(/,/g, '');
       }
     }
@@ -122,7 +137,6 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     return isNaN(num) ? 0 : num;
   };
 
-  // 4. Extração e Filtro de Dados
   const dataRows: AdsRow[] = [];
 
   for (let i = headerIndex + 1; i < lines.length; i++) {
@@ -131,23 +145,20 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
 
     const cols = parseLine(line, separator);
     
-    // Ignorar linhas de totais (Google Ads adiciona "Total:" no final do arquivo)
     const lineStr = line.toLowerCase();
     if (lineStr.includes('total:') || lineStr.startsWith('--')) continue;
 
-    // Checagem extra de segurança contra lixo: a linha precisa ter o mínimo de colunas
     if (cols.length <= Math.max(idx.clicks, idx.impressions)) continue;
 
-    // Extrair os termos com fallback seguro
-    const searchTermStr = idx.searchTerm !== -1 ? cleanText(cols[idx.searchTerm]) : 'N/A';
-    const keywordStr = idx.keyword !== -1 ? cleanText(cols[idx.keyword]) : '';
+    const searchTermStr = idx.searchTerm !== -1 ? cleanKeyword(cols[idx.searchTerm]) : 'N/A';
+    const keywordStr = idx.keyword !== -1 ? cleanKeyword(cols[idx.keyword]) : '';
     const finalTerm = (searchTermStr !== 'N/A' && searchTermStr !== '') ? searchTermStr : keywordStr;
 
     dataRows.push({
       searchTerm: finalTerm,
       keyword: keywordStr,
-      matchType: idx.matchType !== -1 ? cleanText(cols[idx.matchType]) : '',
-      campaign: idx.campaign !== -1 ? cleanText(cols[idx.campaign]) : 'N/A', // Web export as vezes omite a campanha
+      matchType: idx.matchType !== -1 ? translateMatchType(cleanText(cols[idx.matchType])) : '',
+      campaign: idx.campaign !== -1 ? cleanText(cols[idx.campaign]) : 'N/A',
       adGroup: idx.adGroup !== -1 ? cleanText(cols[idx.adGroup]) : 'N/A',
       campaignStatus: idx.campaignStatus !== -1 ? cleanText(cols[idx.campaignStatus]) : '',
       adGroupStatus: idx.adGroupStatus !== -1 ? cleanText(cols[idx.adGroupStatus]) : '',

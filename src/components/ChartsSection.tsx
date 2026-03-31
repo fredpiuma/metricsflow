@@ -11,13 +11,33 @@ interface ChartsSectionProps {
 
 const COLORS = ['#1a73e8', '#34a853', '#fbbc05', '#ea4335', '#8e24aa', '#00acc1', '#fb8c00', '#546e7a', '#d81b60', '#7cb342'];
 
+// Dicionário de abreviações para os gráficos (já recebe a string padronizada em PT-BR do parser)
+const getAbbreviatedMatchType = (matchType: string): string => {
+  if (!matchType) return '';
+  const map: Record<string, string> = {
+    'AI Max': 'AI Max',
+    'Correspondência ampla': 'Ampla',
+    'Correspondência de frase': 'Frase',
+    'Correspondência exata': 'Exata',
+    'Correspondência exata variação': 'Exata variação',
+    'Correspondência de frase variação': 'Frase variação',
+  };
+  return map[matchType] || matchType;
+};
+
+const formatLabel = (term: string, matchType: string, maxLength: number) => {
+  const truncatedTerm = term.length > maxLength ? term.substring(0, maxLength) + '...' : term;
+  const abbr = getAbbreviatedMatchType(matchType);
+  return abbr ? `${truncatedTerm} (${abbr})` : truncatedTerm;
+};
+
 const ChartsSection = ({ data }: ChartsSectionProps) => {
   // Top 5 Investimentos
   const topCost = [...data]
     .sort((a, b) => b.cost - a.cost)
     .slice(0, 5)
     .map(d => ({
-      name: d.searchTerm.length > 20 ? d.searchTerm.substring(0, 20) + '...' : d.searchTerm,
+      name: formatLabel(d.searchTerm, d.matchType, 20),
       valor: d.cost
     }));
 
@@ -27,7 +47,7 @@ const ChartsSection = ({ data }: ChartsSectionProps) => {
   const othersClicks = sortedByClicks.slice(10).reduce((sum, d) => sum + d.clicks, 0);
   
   const clickDistribution = topClicks.map(d => ({
-    name: d.searchTerm.length > 15 ? d.searchTerm.substring(0, 15) + '...' : d.searchTerm,
+    name: formatLabel(d.searchTerm, d.matchType, 15),
     value: d.clicks
   }));
 
