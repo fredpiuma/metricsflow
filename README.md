@@ -23,8 +23,7 @@ O **MetricsFlow** é uma ferramenta de análise inteligente e instantânea para 
 
 Este projeto foi idealizado e desenvolvido por **Frederico de Castro**.
 
-- **Site/Portfólio**: [fredericodecastro.com.br](https://www.fredericodecastro.com.br)
-- **Links úteis**: [fredericodecastro.com.br/links](https://www.fredericodecastro.com.br/links)
+- **Site**: [fredericodecastro.com.br/links](https://www.fredericodecastro.com.br/links)
 
 ---
 *© Todos os direitos reservados.*
