@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AdsRow } from '@/utils/dataParser';
 import {
   Table,
@@ -8,26 +9,57 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react";
 
 interface DataTableProps {
   data: AdsRow[];
 }
 
+type SortKey = 'searchTerm' | 'matchType' | 'cost' | 'impressions' | 'clicks' | 'ctr' | 'avgCpc';
+
 const DataTable = ({ data }: DataTableProps) => {
-  // Lógica de filtragem:
-  // 1. Termos com pelo menos 1 clique
+  const [sortKey, setSortKey] = useState<SortKey>('clicks');
+  const [sortDesc, setSortDesc] = useState(true);
+
+  // Lógica de filtragem (mantém a mesma base: com cliques + top 10 sem cliques)
   const withClicks = data.filter(d => d.clicks > 0);
-  
-  // 2. Top 10 termos sem cliques com maior número de impressões
   const withoutClicks = data
     .filter(d => d.clicks === 0)
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 10);
 
-  const displayData = [...withClicks, ...withoutClicks];
+  let displayData = [...withClicks, ...withoutClicks];
+
+  // Aplica a ordenação
+  displayData.sort((a, b) => {
+    let valA = a[sortKey];
+    let valB = b[sortKey];
+
+    // Tratamento para strings (ignorar case)
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+
+    if (valA < valB) return sortDesc ? 1 : -1;
+    if (valA > valB) return sortDesc ? -1 : 1;
+    return 0;
+  });
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDesc(!sortDesc);
+    } else {
+      setSortKey(key);
+      setSortDesc(true); // Padrão decrescente ao trocar de coluna
+    }
+  };
 
   const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const formatPercent = (val: number) => `${val.toFixed(2)}%`;
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortKey !== key) return <ArrowUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity" />;
+    return sortDesc ? <ArrowDown className="ml-2 h-4 w-4 text-blue-600 dark:text-blue-400" /> : <ArrowUp className="ml-2 h-4 w-4 text-blue-600 dark:text-blue-400" />;
+  };
 
   return (
     <div className="mt-8 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
@@ -39,13 +71,69 @@ const DataTable = ({ data }: DataTableProps) => {
         <Table>
           <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
             <TableRow>
-              <TableHead className="w-[300px]">Termo de Pesquisa</TableHead>
-              <TableHead>Correspondência</TableHead>
-              <TableHead className="text-right">Investimento</TableHead>
-              <TableHead className="text-right">Impressões</TableHead>
-              <TableHead className="text-right">Cliques</TableHead>
-              <TableHead className="text-right">CTR</TableHead>
-              <TableHead className="text-right">CPC Médio</TableHead>
+              <TableHead 
+                className="w-[300px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('searchTerm')}
+              >
+                <div className="flex items-center">
+                  Termo de Pesquisa
+                  {renderSortIcon('searchTerm')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('matchType')}
+              >
+                <div className="flex items-center">
+                  Correspondência
+                  {renderSortIcon('matchType')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('cost')}
+              >
+                <div className="flex items-center justify-end">
+                  Investimento
+                  {renderSortIcon('cost')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('impressions')}
+              >
+                <div className="flex items-center justify-end">
+                  Impressões
+                  {renderSortIcon('impressions')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('clicks')}
+              >
+                <div className="flex items-center justify-end">
+                  Cliques
+                  {renderSortIcon('clicks')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('ctr')}
+              >
+                <div className="flex items-center justify-end">
+                  CTR
+                  {renderSortIcon('ctr')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('avgCpc')}
+              >
+                <div className="flex items-center justify-end">
+                  CPC Médio
+                  {renderSortIcon('avgCpc')}
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
