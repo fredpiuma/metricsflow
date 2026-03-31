@@ -148,6 +148,17 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     const keywordStr = idx.keyword !== -1 ? cleanKeyword(cols[idx.keyword]) : '';
     const finalTerm = (searchTermStr !== 'N/A' && searchTermStr !== '') ? searchTermStr : keywordStr;
 
+    // Métricas Base
+    const clicks = idx.clicks !== -1 ? cleanNumber(cols[idx.clicks]) : 0;
+    const cost = idx.cost !== -1 ? cleanNumber(cols[idx.cost]) : 0;
+    const impressions = idx.impressions !== -1 ? cleanNumber(cols[idx.impressions]) : 0;
+    const conversions = idx.conversions !== -1 ? cleanNumber(cols[idx.conversions]) : 0;
+
+    // Métricas Derivadas (Calculadas matematicamente para evitar erros de parse)
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    const avgCpc = clicks > 0 ? cost / clicks : 0;
+    const costPerConversion = conversions > 0 ? cost / conversions : 0;
+
     dataRows.push({
       searchTerm: finalTerm,
       keyword: keywordStr,
@@ -156,13 +167,13 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
       adGroup: idx.adGroup !== -1 ? cleanText(cols[idx.adGroup]) : 'N/A',
       campaignStatus: idx.campaignStatus !== -1 ? cleanText(cols[idx.campaignStatus]) : '',
       adGroupStatus: idx.adGroupStatus !== -1 ? cleanText(cols[idx.adGroupStatus]) : '',
-      clicks: idx.clicks !== -1 ? cleanNumber(cols[idx.clicks]) : 0,
-      cost: idx.cost !== -1 ? cleanNumber(cols[idx.cost]) : 0,
-      impressions: idx.impressions !== -1 ? cleanNumber(cols[idx.impressions]) : 0,
-      ctr: idx.ctr !== -1 ? cleanNumber(cols[idx.ctr]) : 0,
-      avgCpc: idx.avgCpc !== -1 ? cleanNumber(cols[idx.avgCpc]) : 0,
-      conversions: idx.conversions !== -1 ? cleanNumber(cols[idx.conversions]) : 0,
-      costPerConversion: idx.costPerConversion !== -1 ? cleanNumber(cols[idx.costPerConversion]) : 0,
+      clicks,
+      cost,
+      impressions,
+      ctr,
+      avgCpc,
+      conversions,
+      costPerConversion,
     });
   }
 
