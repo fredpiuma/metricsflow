@@ -113,15 +113,6 @@ const DataTable = ({ data }: DataTableProps) => {
               </TableHead>
               <TableHead 
                 className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
-                onClick={() => handleSort('cost')}
-              >
-                <div className="flex items-center justify-end">
-                  Investimento
-                  {renderSortIcon('cost')}
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
                 onClick={() => handleSort('impressions')}
               >
                 <div className="flex items-center justify-end">
@@ -156,6 +147,15 @@ const DataTable = ({ data }: DataTableProps) => {
                   {renderSortIcon('avgCpc')}
                 </div>
               </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group select-none"
+                onClick={() => handleSort('cost')}
+              >
+                <div className="flex items-center justify-end">
+                  Custo
+                  {renderSortIcon('cost')}
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,7 +172,6 @@ const DataTable = ({ data }: DataTableProps) => {
                     {getAbbreviatedMatchType(row.matchType) || 'N/A'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right font-mono text-sm">{formatCurrency(row.cost)}</TableCell>
                 <TableCell className="text-right text-sm">{row.impressions.toLocaleString('pt-BR')}</TableCell>
                 <TableCell className="text-right">
                   <span className={row.clicks > 0 ? "font-bold text-blue-600 dark:text-blue-400" : "text-slate-400"}>
@@ -181,6 +180,9 @@ const DataTable = ({ data }: DataTableProps) => {
                 </TableCell>
                 <TableCell className="text-right text-sm">{formatPercent(row.ctr)}</TableCell>
                 <TableCell className="text-right font-mono text-sm">{formatCurrency(row.avgCpc)}</TableCell>
+                <TableCell className="text-right font-mono text-sm font-medium text-slate-800 dark:text-slate-200">
+                  {formatCurrency(row.cost)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
