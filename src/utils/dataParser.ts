@@ -11,10 +11,11 @@ export interface AdsRow {
   impressions: number;
   ctr: number;
   avgCpc: number;
+  conversions: number;
+  costPerConversion: number;
   [key: string]: any;
 }
 
-// Dicionário de traduções para padronizar os tipos de correspondência
 const MATCH_TYPE_TRANSLATIONS: Record<string, string> = {
   'ai max': 'AI Max',
   'broad match': 'Correspondência ampla',
@@ -30,10 +31,9 @@ const MATCH_TYPE_TRANSLATIONS: Record<string, string> = {
 const translateMatchType = (raw: string): string => {
   if (!raw) return '';
   const normalized = raw.toLowerCase().trim();
-  return MATCH_TYPE_TRANSLATIONS[normalized] || raw; // Fallback para o original se não encontrar
+  return MATCH_TYPE_TRANSLATIONS[normalized] || raw;
 };
 
-// Helper para ler linhas CSV/TSV corretamente
 const parseLine = (line: string, separator: string): string[] => {
   if (separator === '\t') return line.split('\t');
   
@@ -71,7 +71,6 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
 
     const currentSep = line.includes('\t') ? '\t' : ',';
     const cols = parseLine(line, currentSep);
-    
     const normalizedCols = cols.map(c => c.toLowerCase().trim().replace(/^"|"$/g, ''));
     
     if (normalizedCols.includes('cliques') || normalizedCols.includes('clicks')) {
@@ -103,6 +102,8 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     impressions: findCol(['impressions', 'impressões', 'impr.']),
     ctr: findCol(['ctr', 'taxa de cliques']),
     avgCpc: findCol(['avg cpc', 'cpc médio', 'cpc méd.']),
+    conversions: findCol(['conversions', 'conversões', 'conv.']),
+    costPerConversion: findCol(['cost / conv.', 'custo / conversão', 'custo / conv.', 'cost per conv.']),
   };
 
   const cleanText = (val: string | undefined): string => {
@@ -110,7 +111,6 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     return val.replace(/^"|"$/g, '').trim();
   };
 
-  // Limpa caracteres especiais [ ] e " usados para indicar correspondência na web UI
   const cleanKeyword = (val: string | undefined): string => {
     if (!val) return '';
     return val.replace(/["[\]]/g, '').trim();
@@ -120,9 +120,7 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
     if (!val) return 0;
     let cleaned = val.replace(/"/g, '').trim();
     if (cleaned === '--' || cleaned === '') return 0;
-    
     cleaned = cleaned.replace(/[R$\s%]/gi, '');
-    
     const match = cleaned.match(/[.,]/g);
     if (match && match.length > 0) {
       const lastPunctuation = match[match.length - 1];
@@ -132,7 +130,6 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
         cleaned = cleaned.replace(/,/g, '');
       }
     }
-    
     const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
   };
@@ -142,12 +139,9 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
   for (let i = headerIndex + 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line || !line.trim()) continue;
-
     const cols = parseLine(line, separator);
-    
     const lineStr = line.toLowerCase();
     if (lineStr.includes('total:') || lineStr.startsWith('--')) continue;
-
     if (cols.length <= Math.max(idx.clicks, idx.impressions)) continue;
 
     const searchTermStr = idx.searchTerm !== -1 ? cleanKeyword(cols[idx.searchTerm]) : 'N/A';
@@ -167,6 +161,8 @@ export const parseAdsData = (rawText: string): AdsRow[] => {
       impressions: idx.impressions !== -1 ? cleanNumber(cols[idx.impressions]) : 0,
       ctr: idx.ctr !== -1 ? cleanNumber(cols[idx.ctr]) : 0,
       avgCpc: idx.avgCpc !== -1 ? cleanNumber(cols[idx.avgCpc]) : 0,
+      conversions: idx.conversions !== -1 ? cleanNumber(cols[idx.conversions]) : 0,
+      costPerConversion: idx.costPerConversion !== -1 ? cleanNumber(cols[idx.costPerConversion]) : 0,
     });
   }
 
