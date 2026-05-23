@@ -141,22 +141,25 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {saveStatus === 'saving' && (
               <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                <Loader2 size={13} className="animate-spin" /> Salvando...
+                <Loader2 size={13} className="animate-spin" />
+                <span className="hidden sm:inline">Salvando...</span>
               </span>
             )}
             {saveStatus === 'saved' && (
               <Button variant="outline" size="sm" onClick={handleCopyLink} className="text-slate-600">
-                {copied
-                  ? <><Check size={14} className="mr-2 text-green-600" />Copiado!</>
-                  : <><Link2 size={14} className="mr-2" />Copiar link</>
-                }
+                {copied ? (
+                  <><Check size={14} className="text-green-600 sm:mr-2" /><span className="hidden sm:inline">Copiado!</span></>
+                ) : (
+                  <><Link2 size={14} className="sm:mr-2" /><span className="hidden sm:inline">Copiar link</span></>
+                )}
               </Button>
             )}
             {saveStatus === 'error' && (
-              <span className="text-xs text-red-500">Erro ao salvar</span>
+              <span className="text-xs text-red-500 hidden sm:inline">Erro ao salvar</span>
             )}
-            <Button variant="outline" size="sm" onClick={handleReset} className="text-slate-600">
-              <RefreshCw size={14} className="mr-2" /> Novo Relatório
+            <Button variant="outline" size="sm" onClick={handleReset} className="text-slate-600" title="Novo Relatório">
+              <RefreshCw size={14} className="sm:mr-2" />
+              <span className="hidden sm:inline">Novo Relatório</span>
             </Button>
           </div>
         </div>
