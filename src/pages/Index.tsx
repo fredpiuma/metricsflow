@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdsRow, parseAdsData } from '@/utils/dataParser';
 import InputSection from '@/components/InputSection';
 import KpiCard from '@/components/KpiCard';
@@ -8,22 +9,30 @@ import ChartsSection from '@/components/ChartsSection';
 import DataTable from '@/components/DataTable';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { 
-  DollarSign, 
-  BarChart3, 
-  MousePointer2, 
-  Target, 
+import {
+  DollarSign,
+  BarChart3,
+  MousePointer2,
+  Target,
   Zap,
   RefreshCw,
-  LayoutDashboard
+  LayoutDashboard,
+  Link2,
+  Check,
+  Loader2
 } from "lucide-react";
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 const Index = () => {
   const [data, setData] = useState<AdsRow[]>([]);
   const [hasData, setHasData] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [copied, setCopied] = useState(false);
 
-  const handleProcess = (text: string) => {
+  const processData = (text: string) => {
     const parsed = parseAdsData(text);
     if (parsed.length > 0) {
       setData(parsed);
@@ -32,9 +41,49 @@ const Index = () => {
     }
   };
 
+  useEffect(() => {
+    const key = searchParams.get('relatorio');
+    if (!key) return;
+    setSaveStatus('saved');
+    fetch(`/api.php?key=${encodeURIComponent(key)}`)
+      .then(r => r.json())
+      .then(({ raw }) => { if (raw) processData(raw); })
+      .catch(() => showError("Erro ao carregar o relatório"));
+  }, []);
+
+  const handleProcess = (text: string) => {
+    processData(text);
+    setSaveStatus('saving');
+    fetch('/api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: text }),
+    })
+      .then(r => r.json())
+      .then(({ key }) => {
+        if (key) {
+          setSearchParams({ relatorio: key });
+          setSaveStatus('saved');
+        }
+      })
+      .catch(() => {
+        setSaveStatus('error');
+        showError("Erro ao salvar o relatório");
+      });
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const handleReset = () => {
     setData([]);
     setHasData(false);
+    setSaveStatus('idle');
+    setSearchParams({});
   };
 
   const kpis = useMemo(() => {
@@ -89,9 +138,27 @@ const Index = () => {
               <p className="text-xs text-slate-500 mt-1">Análise de Desempenho Google Ads</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleReset} className="text-slate-600">
-            <RefreshCw size={14} className="mr-2" /> Novo Relatório
-          </Button>
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saving' && (
+              <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                <Loader2 size={13} className="animate-spin" /> Salvando...
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <Button variant="outline" size="sm" onClick={handleCopyLink} className="text-slate-600">
+                {copied
+                  ? <><Check size={14} className="mr-2 text-green-600" />Copiado!</>
+                  : <><Link2 size={14} className="mr-2" />Copiar link</>
+                }
+              </Button>
+            )}
+            {saveStatus === 'error' && (
+              <span className="text-xs text-red-500">Erro ao salvar</span>
+            )}
+            <Button variant="outline" size="sm" onClick={handleReset} className="text-slate-600">
+              <RefreshCw size={14} className="mr-2" /> Novo Relatório
+            </Button>
+          </div>
         </div>
       </div>
 

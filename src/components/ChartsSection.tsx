@@ -1,6 +1,6 @@
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
 } from 'recharts';
 import { AdsRow } from '@/utils/dataParser';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -81,26 +81,35 @@ const ChartsSection = ({ data }: ChartsSectionProps) => {
         <CardHeader>
           <CardTitle className="text-lg font-semibold">Distribuição de Cliques</CardTitle>
         </CardHeader>
-        <CardContent className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={clickDistribution}
-                cx="50%"
-                cy="45%"
-                innerRadius={70}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {clickDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-              <Legend verticalAlign="bottom" height={36}/>
-            </PieChart>
-          </ResponsiveContainer>
+        <CardContent>
+          <div className="h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={clickDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {clickDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3">
+            {clickDistribution.map((entry, index) => (
+              <div key={entry.name} className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
+                {entry.name}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

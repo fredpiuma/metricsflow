@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp api.php .htaccess dist/ && mkdir -p dist/data && cp data/.htaccess dist/data/",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
